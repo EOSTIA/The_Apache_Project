@@ -1,0 +1,121 @@
+version: '3.8'
+
+# StreamSync Infrastructure — Kafka + Zookeeper + Redis
+# Run: docker-compose up -d
+# Stop: docker-compose down
+
+services:
+
+  # ─────────────────────────────────────────────────────────
+  # Zookeeper — Kafka's coordination service
+  # Manages Kafka broker metadata, leader election, topic configs
+  # Note: Kafka 3.x+ can run without Zookeeper (KRaft mode),
+  # but we use Zookeeper here for broader compatibility
+  # ─────────────────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: streamsync-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────
+  # Kafka Broker
+  # Single-node setup for local dev.
+  # For production: run 3 brokers minimum for HA.
+  # ─────────────────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: streamsync-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"       # External (your Spring Boot apps connect here)
+      - "9101:9101"       # JMX metrics
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # PLAINTEXT_HOST: how external clients (your apps) connect
+      # PLAINTEXT: how internal Docker services connect
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # Log compaction settings (applies to topics created with cleanup.policy=compact)
+      KAFKA_LOG_CLEANUP_POLICY: compact
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+
+      # Auto-create topics (topics are also created by Spring Boot KafkaAdmin on startup)
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+      # JMX for monitoring
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────
+  # Kafka UI — web console to inspect topics, messages, consumer groups
+  # Access: http://localhost:9000
+  # ─────────────────────────────────────────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: streamsync-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "9000:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: streamsync-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────
+  # Redis — shared config state cache
+  # Used for:
+  #   1. Config Server writes current config state after each update
+  #   2. Microservices bootstrap from Redis on cold start
+  #   3. Dashboard reads current config without hitting Kafka
+  # ─────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: streamsync-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --loglevel warning
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────
+  # Redis Commander — web UI for Redis
+  # Access: http://localhost:8090
+  # ─────────────────────────────────────────────────────────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: streamsync-redis-ui
+    depends_on:
+      - redis
+    ports:
+      - "8090:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    restart: unless-stopped
+
+volumes:
+  zookeeper-data:
+  kafka-data:
+  redis-data:
