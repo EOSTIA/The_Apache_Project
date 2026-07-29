@@ -1,0 +1,26 @@
+# OPTIONAL. You said "no Docker" for your main setup, and the README's
+# primary path is installing Redis manually inside WSL - that's what you
+# should actually use and be able to explain.
+#
+# This file exists purely as a fallback/alternative for days when WSL is
+# being annoying, or if you ever want to show "I also know how to containerize
+# a dependency" in an interview. You do NOT need this if you're following the
+# WSL instructions in the main README.
+#
+# Usage (only if you choose this path instead of WSL):
+#   docker compose -f docker/docker-compose.yml up -d
+#   docker compose -f docker/docker-compose.yml down
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: config-tower-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:
