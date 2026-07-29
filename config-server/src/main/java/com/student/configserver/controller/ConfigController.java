@@ -14,8 +14,9 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/config")
-@CrossOrigin(origins = "*") // dashboard is a plain static HTML file opened from disk/file server, so we allow any origin here (fine for a local demo)
-public class ConfigController {
+// CORS is bypassd - do not add @CrossOrigin here, causes conflicting CORS behavior
+public class ConfigController 
+{
 
     private static final Set<String> VALID_SERVICES = Set.of("payments", "auth", "inventory");
 
@@ -23,7 +24,8 @@ public class ConfigController {
     private final ConfigProducer producer;
     private final RedisConfigService redisConfigService;
 
-    public ConfigController(AesGcmEncryptor encryptor, ConfigProducer producer, RedisConfigService redisConfigService) {
+    public ConfigController(AesGcmEncryptor encryptor, ConfigProducer producer, RedisConfigService redisConfigService) 
+    {
         this.encryptor = encryptor;
         this.producer = producer;
         this.redisConfigService = redisConfigService;
@@ -42,8 +44,10 @@ public class ConfigController {
      * "write" endpoint in the whole system, everything else is read-only.
      */
     @PostMapping("/push")
-    public Map<String, Object> push(@RequestBody PushRequest request) {
-        if (!VALID_SERVICES.contains(request.service())) {
+    public Map<String, Object> push(@RequestBody PushRequest request) 
+    {
+        if (!VALID_SERVICES.contains(request.service())) 
+        {
             throw new IllegalArgumentException("Unknown service: " + request.service() + ". Must be one of " + VALID_SERVICES);
         }
 
@@ -66,17 +70,20 @@ public class ConfigController {
 
     /** Lets the dashboard show what's currently sitting in Redis for a given service, without going through Kafka. */
     @GetMapping("/redis/{service}")
-    public Map<String, String> getRedisState(@PathVariable String service) {
+    public Map<String, String> getRedisState(@PathVariable String service) 
+    {
         return redisConfigService.getAllForService(service);
     }
 
     @GetMapping("/services")
-    public List<String> listServices() {
+    public List<String> listServices() 
+    {
         return List.copyOf(VALID_SERVICES);
     }
 
     @GetMapping("/health")
-    public Map<String, String> health() {
+    public Map<String, String> health() 
+    {
         return Map.of("status", "UP", "service", "config-server");
     }
 }
