@@ -1,0 +1,31 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: config-server
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  security:
+    user:
+      name: admin
+      password: "{noop}admin123"
+
+# 256-bit AES key, base64 encoded. Same value must be copied into
+# payments/auth/inventory application.yml so they can decrypt what we encrypt.
+# This is a DEMO key only - never hardcode real keys like this in production.
+app:
+  crypto:
+    secret-key-base64: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+
+logging:
+  level:
+    com.student: INFO
