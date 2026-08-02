@@ -1,5 +1,5 @@
-// Config Tower Dashboard
-// Plain vanilla JS on purpose - this is a student project, not a React app.
+// Dashboard
+// Plain vanilla JS
 // It polls each service's own /config endpoint directly (no gateway needed
 // for local dev) and shows what's currently sitting in each service's
 // in-memory ConcurrentHashMap.

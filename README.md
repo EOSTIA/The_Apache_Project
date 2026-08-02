@@ -1,4 +1,4 @@
-# Config Tower
+# Config Tower - Distributed Sytems syncing
 
 A tiny config-distribution system built to learn how Kafka, Redis, and Spring Boot
 microservices actually fit together — not a production system, a learning project.
