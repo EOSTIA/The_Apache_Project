@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Config Tower Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>⚙ Config Tower</h1>
+    <p class="subtitle">Live config state across payments · auth · inventory (auto-refresh every 3s)</p>
+  </header>
+
+  <main>
+    <section class="push-panel">
+      <h2>Push a config value</h2>
+      <form id="pushForm">
+        <label>
+          Service
+          <select id="serviceSelect">
+            <option value="payments">payments</option>
+            <option value="auth">auth</option>
+            <option value="inventory">inventory</option>
+          </select>
+        </label>
+        <label>
+          Key
+          <input type="text" id="keyInput" placeholder="e.g. db.connection.timeout" required>
+        </label>
+        <label>
+          Value
+          <input type="text" id="valueInput" placeholder="e.g. 30000" required>
+        </label>
+        <label>
+          Admin username
+          <input type="text" id="userInput" value="admin">
+        </label>
+        <label>
+          Admin password
+          <input type="password" id="passInput" value="admin123">
+        </label>
+        <button type="submit">Push</button>
+      </form>
+      <p id="pushStatus"></p>
+    </section>
+
+    <section class="services-grid" id="servicesGrid">
+      <!-- filled by app.js -->
+    </section>
+
+    <section class="activity-log">
+      <h2>Activity Log</h2>
+      <ul id="activityList"></ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
