@@ -1,0 +1,6 @@
+/redis-reads-report
+
+/propagation-summary.csv
+/push-summary.csv
+/redis-read-summary.csv
+/redis-reads.jtl
